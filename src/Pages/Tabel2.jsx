@@ -17,6 +17,10 @@ export default function CommentsTableWithAlias() {
     if (!comments.length) dispatch(fetchComments());
   }, [dispatch, comments.length]);
 
+
+
+  
+      
   // Filter comments including alias
   const filteredComments = comments.filter(
     (c) =>
