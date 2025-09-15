@@ -1,225 +1,231 @@
-import React, { useEffect, useState } from "react";
+  import React, { useEffect, useState } from "react";
+  import { useDispatch, useSelector } from "react-redux";
+  import { fetchComments } from "../redux/actions/authActions";
+  import { Button } from "@material-tailwind/react";
 
-export default function CommentsTable() {
-  const [comments, setComments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [recordsPerPage, setRecordsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch comments API
-  useEffect(() => {
-    fetch("https://jsonplaceholder.typicode.com/comments")
-      .then((res) => res.json())
-      .then((data) => {
-        setComments(data.slice(0, 1000)); // limit to first 1000 comments
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching comments:", err);
-        setLoading(false);
-      });
-  }, []);
+  export default function CommentsTable() {
+    const dispatch = useDispatch();
+    const { comments, loading } = useSelector((state) => state.auth);
 
-  // Filtered data
-  const filteredComments = comments.filter(
-    (c) =>
-      c.id.toString().includes(searchTerm.toLowerCase()) ||
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.body.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    const [currentPage, setCurrentPage] = useState(1);
+    const [recordsPerPage, setRecordsPerPage] = useState(10);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [sortField, setSortField] = useState("id");
+    const [sortOrder, setSortOrder] = useState("asc");
 
-  // Pagination logic
-  const totalPages =
-    recordsPerPage === "all"
-      ? 1
-      : Math.ceil(filteredComments.length / recordsPerPage);
+    // Fetch data once
+    useEffect(() => {
+      if (!comments.length) dispatch(fetchComments());
+    }, [dispatch, comments.length]);
 
-  const indexOfLast =
-    recordsPerPage === "all" ? filteredComments.length : currentPage * recordsPerPage;
-  const indexOfFirst = recordsPerPage === "all" ? 0 : indexOfLast - recordsPerPage;
-  const currentComments =
-    recordsPerPage === "all"
-      ? filteredComments
-      : filteredComments.slice(indexOfFirst, indexOfLast);
+    // Filter comments based on search term
+    const filteredComments = comments.filter(
+      (c) =>
+        c.id.toString().includes(searchTerm) ||
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.body.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-  // Generate visible page numbers
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 5;
+    // Sort filtered comments
+    const sortedComments = [...filteredComments].sort((a, b) => {
+      if (sortField === "id") {
+        return sortOrder === "asc" ? a.id - b.id : b.id - a.id;
+      } else {
+        return sortOrder === "asc"
+          ? a[sortField].localeCompare(b[sortField])
+          : b[sortField].localeCompare(a[sortField]);
+      }
+    });
 
-    let start = Math.max(1, currentPage - 2);
-    let end = Math.min(totalPages, currentPage + 2);
+    // Pagination logic
+    const indexOfLast = currentPage * recordsPerPage;
+    const indexOfFirst = indexOfLast - recordsPerPage;
+    const currentComments = sortedComments.slice(indexOfFirst, indexOfLast);
+    const totalPages = Math.ceil(filteredComments.length / recordsPerPage);
 
-    if (currentPage <= 3) {
-      end = Math.min(totalPages, maxVisible);
-    }
-    if (currentPage >= totalPages - 2) {
-      start = Math.max(1, totalPages - (maxVisible - 1));
-    }
+    // Sort handler
+    const handleSort = (field) => {
+      if (sortField === field) {
+        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      } else {
+        setSortField(field);
+        setSortOrder("asc");
+      }
+    };
 
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
+    // Rows per page handler
+    const handleRowsChange = (e) => {
+      setRecordsPerPage(Number(e.target.value));
+      setCurrentPage(1); // reset to first page
+    };
 
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
-      <div className="w-full max-w-6xl bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Comments Table
-        </h2>
+    return (
+      <div className="p-4">
+    <h1 className="text-xl font-bold mb-4 text-center">Comments Table</h1>
 
-        {/* Search (left) + Dropdown (right) */}
-        <div className="flex justify-between items-center mb-4">
+
+
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
           {/* Search */}
           <input
             type="text"
-            placeholder="Search by ID, name, email, or comment..."
+            placeholder="Search by ID, Name, Email, Comment..."
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-96 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="p-2 border rounded w-full max-w-sm"
           />
 
-          {/* Dropdown */}
-          <select
-            value={recordsPerPage}
-            onChange={(e) => {
-              setRecordsPerPage(
-                e.target.value === "all" ? "all" : parseInt(e.target.value)
-              );
-              setCurrentPage(1);
-            }}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={40}>40</option>
-            <option value={70}>70</option>
-            <option value="all">All</option>
-          </select>
+          {/* Rows selector */}
+          <div>
+            <label className="mr-2 font-medium">Rows per page:</label>
+            <select
+              value={recordsPerPage}
+              onChange={handleRowsChange}
+              className="p-2 border rounded"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
         </div>
 
         {loading ? (
-          <p className="text-center text-gray-500">Loading comments...</p>
+          <p>Loading...</p>
         ) : (
           <>
-            <table className="w-full border border-gray-300 text-left text-sm">
-              <thead className="bg-gray-200 text-gray-700">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
                 <tr>
-                  <th className="p-3 border border-gray-300">ID</th>
-                  <th className="p-3 border border-gray-300">Name</th>
-                  <th className="p-3 border border-gray-300">Email</th>
-                  <th className="p-3 border border-gray-300">Comment</th>
+                  <th
+                    className="border p-2 cursor-pointer"
+                    onClick={() => handleSort("id")}
+                  >
+                    ID {sortField === "id" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                  </th>
+                  <th
+                    className="border p-2 cursor-pointer"
+                    onClick={() => handleSort("name")}
+                  >
+                    Name {sortField === "name" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                  </th>
+                  <th
+                    className="border p-2 cursor-pointer"
+                    onClick={() => handleSort("email")}
+                  >
+                    Email {sortField === "email" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                  </th>
+                  <th className="border p-2">Comment</th>
                 </tr>
               </thead>
               <tbody>
-                {currentComments.map((comment) => (
-                  <tr
-                    key={comment.id}
-                    className="hover:bg-gray-100 transition-colors"
-                  >
-                    <td className="p-3 border border-gray-300">{comment.id}</td>
-                    <td className="p-3 border border-gray-300">{comment.name}</td>
-                    <td className="p-3 border border-gray-300 text-blue-600">
-                      {comment.email}
-                    </td>
-                    <td className="p-3 border border-gray-300">
-                      {comment.body}
-                    </td>
+                {currentComments.map((c) => (
+                  <tr key={c.id} className="hover:bg-gray-100">
+                    <td className="border p-2">{c.id}</td>
+                    <td className="border p-2">{c.name}</td>
+                    <td className="border p-2">{c.email}</td>
+                    <td className="border p-2">{c.body}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            {/* Records info + Pagination in one row */}
-            <div className="flex justify-between items-center mt-4">
-              {/* Records info (left) */}
-              <p className="text-gray-600 text-sm">
-                Showing{" "}
-                {filteredComments.length === 0 ? 0 : indexOfFirst + 1} –{" "}
-                {Math.min(indexOfLast, filteredComments.length)} of{" "}
-                {filteredComments.length}
-              </p>
+            {/* Pagination */}
+            <div className="mt-4 flex justify-center items-center gap-2 flex-wrap">
+              {/* Prev button */}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
 
-              {/* Pagination (center) */}
-              <div className="flex justify-center flex-1 gap-2">
-                <button
-                  className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                >
-                  Prev
-                </button>
+              {/* Page numbers (max 5 visible) */}
+              {(() => {
+                const pageNumbers = [];
+                let startPage = Math.max(currentPage - 2, 1);
+                let endPage = Math.min(startPage + 4, totalPages);
 
-                {/* First Page */}
-                {getPageNumbers()[0] > 1 && (
-                  <>
+                if (endPage - startPage < 4) {
+                  startPage = Math.max(endPage - 4, 1);
+                }
+
+                if (startPage > 1) {
+                  pageNumbers.push(
                     <button
-                      className={`px-3 py-1 rounded ${
-                        currentPage === 1
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200"
-                      }`}
+                      key={1}
                       onClick={() => setCurrentPage(1)}
+                      className={`px-3 py-1 border rounded ${
+                        currentPage === 1 ? "bg-blue-500 text-white" : ""
+                      }`}
                     >
                       1
                     </button>
-                    <span>...</span>
-                  </>
-                )}
+                  );
+                  if (startPage > 2) pageNumbers.push(<span key="dots-start">...</span>);
+                }
 
-                {/* Middle Pages */}
-                {getPageNumbers().map((num) => (
-                  <button
-                    key={num}
-                    onClick={() => setCurrentPage(num)}
-                    className={`px-3 py-1 rounded ${
-                      currentPage === num
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-200"
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
-
-                {/* Last Page */}
-                {getPageNumbers().slice(-1)[0] < totalPages && (
-                  <>
-                    <span>...</span>
+                for (let i = startPage; i <= endPage; i++) {
+                  pageNumbers.push(
                     <button
-                      className={`px-3 py-1 rounded ${
-                        currentPage === totalPages
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200"
+                      key={i}
+                      onClick={() => setCurrentPage(i)}
+                      className={`px-3 py-1 border rounded ${
+                        currentPage === i ? "bg-blue-500 text-white" : ""
                       }`}
+                    >
+                      {i}
+                    </button>
+                  );
+                }
+
+                if (endPage < totalPages) {
+                  if (endPage < totalPages - 1) pageNumbers.push(<span key="dots-end">...</span>);
+                  pageNumbers.push(
+                    <button
+                      key={totalPages}
                       onClick={() => setCurrentPage(totalPages)}
+                      className={`px-3 py-1 border rounded ${
+                        currentPage === totalPages ? "bg-blue-500 text-white" : ""
+                      }`}
                     >
                       {totalPages}
                     </button>
-                  </>
-                )}
+                  );
+                }
 
-                <button
-                  className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </button>
-              </div>
+                return pageNumbers;
+              })()}
+
+              {/* Next button */}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+
+              {/* Navigation Button to Tabel2 */}
+   <Button
+  size="sm"
+  color="blue"
+  onClick={() => navigate("/Tabel2")}
+  className="py-1 px-3 text-sm rounded-md"
+>
+  Go to Table 2
+</Button>
+
+
+                
             </div>
           </>
         )}
       </div>
-    </div>
-  );
-}
+    );
+  }
