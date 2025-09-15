@@ -2,11 +2,14 @@
   import { useDispatch, useSelector } from "react-redux";
   import { fetchComments } from "../redux/actions/authActions";
   import { Button } from "@material-tailwind/react";
+  import { useNavigate } from "react-router-dom";
+
 
 
   export default function CommentsTable() {
     const dispatch = useDispatch();
     const { comments, loading } = useSelector((state) => state.auth);
+    const navigate = useNavigate();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [recordsPerPage, setRecordsPerPage] = useState(10);
@@ -212,14 +215,14 @@
               </button>
 
               {/* Navigation Button to Tabel2 */}
-   <Button
-  size="sm"
-  color="blue"
-  onClick={() => navigate("/Tabel2")}
-  className="py-1 px-3 text-sm rounded-md"
->
-  Go to Table 2
-</Button>
+   <div className="w-full max-w-5xl flex justify-end mb-2">
+  <button
+    onClick={() => navigate("/Tabel2")}
+    className="py-1 px-3 bg-blue-500 text-white rounded-md text-sm"
+  >
+    Go to Table 2
+  </button>
+</div>
 
 
                 
