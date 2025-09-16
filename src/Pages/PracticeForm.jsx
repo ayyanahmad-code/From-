@@ -43,7 +43,7 @@ export default function PracticeForm() {
             label="First Name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="bg-gray-50 border border-gray-400 border-t-4 border-t-gray-800 rounded-lg"
+            className="bg-gray-50 border border-gray-400 border-t-4 border-t-gray-500 rounded-lg"
           />
 
           {/* Last Name */}
@@ -51,7 +51,7 @@ export default function PracticeForm() {
             label="Last Name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="bg-gray-50 border border-gray-400 border-t-4 border-t-gray-800 rounded-lg"
+            className="bg-gray-50 border border-gray-400 border-t-4 border-t-gray-500 rounded-lg"
           />
 
           {/* State Select */}

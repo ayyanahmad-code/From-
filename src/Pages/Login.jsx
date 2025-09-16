@@ -53,7 +53,7 @@ export default function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               color="blue"
-              className="bg-gray-50 border border-gray-500 border-t-2 border-t-gray-900 rounded-lg"
+              className="bg-gray-50 border border-gray-500 border-t-2 border-t-gray-500 rounded-lg"
             />
 
             {/* Password with Eye Toggle */}
@@ -64,7 +64,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 color="blue"
-                className="bg-gray-50 border border-gray-500 border-t-2 border-t-gray-900 rounded-lg pr-10"
+                className="bg-gray-50 border border-gray-500 border-t-2 border-t-gray-500 rounded-lg pr-10"
               />
               <button
                 type="button"
