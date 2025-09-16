@@ -14,7 +14,7 @@ export default function Login() {
     e.preventDefault();
 
     // Hardcoded credentials
-    const validUsername = "ayyan";
+    const validUsername = "Ayyan";
     const validPassword = "29926";
 
     if (username === validUsername && password === validPassword) {
