@@ -89,7 +89,7 @@ export default function PracticeForm() {
             <Input
               label="Extra Information"
               placeholder="Enter details..."
-              className="bg-gray-50 border border-gray-400 border-t-4 border-t-gray-600 rounded-lg"
+              className="bg-gray-50 border border-gray-500 border-t-4 border-t-gray-500 rounded-lg"
             />
           )}
 
