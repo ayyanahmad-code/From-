@@ -25,15 +25,11 @@ export default function CommentsTableWithAlias() {
     if (!comments.length) dispatch(fetchComments());
   }, [dispatch, comments.length]);
 
-  // Filter comments including alias
-  const filteredComments = comments.filter(
-    (c) =>
-      c.id.toString().includes(searchTerm) ||
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (c.alias && c.alias.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.body.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // 🔍 Filter comments only by name
+  const filteredComments = comments.filter((c) => {
+    const term = searchTerm.toLowerCase();
+    return c.name && c.name.toLowerCase().indexOf(term) !== -1;
+  });
 
   // Sort filtered comments (with alias + direction)
   const sortedComments = [...filteredComments].sort((a, b) => {
@@ -73,7 +69,7 @@ export default function CommentsTableWithAlias() {
   return (
     <div className="p-4 flex flex-col items-center">
       <h2 className="text-2xl font-bold mb-4 text-center">
-        Comments Table with Alias
+        Comments Table (Filter by Name Only)
       </h2>
 
       {/* Controls */}
@@ -81,7 +77,7 @@ export default function CommentsTableWithAlias() {
         {/* Search */}
         <input
           type="text"
-          placeholder="Search by ID, Name, Alias, Email or Comment..."
+          placeholder="Search by Name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="p-2 border rounded w-full sm:w-1/2"
