@@ -12,33 +12,37 @@ export default function CommentsTableWithAlias() {
   const [sortField, setSortField] = useState("id");
   const [sortOrder, setSortOrder] = useState("asc");
 
+  // alias map: what UI clicks vs. actual object keys
+  const sortAliases = {
+    id: "id",
+    alias: "alias",
+    name: "name",
+    email: "email",
+  };
+
   // Fetch data once
   useEffect(() => {
     if (!comments.length) dispatch(fetchComments());
   }, [dispatch, comments.length]);
 
-
-
-  
-      
   // Filter comments including alias
   const filteredComments = comments.filter(
     (c) =>
       c.id.toString().includes(searchTerm) ||
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.alias.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.alias && c.alias.toLowerCase().includes(searchTerm.toLowerCase())) ||
       c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.body.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort filtered comments
+  // Sort filtered comments (with alias + direction)
   const sortedComments = [...filteredComments].sort((a, b) => {
+    const direction = sortOrder === "asc" ? 1 : -1;
+
     if (sortField === "id") {
-      return sortOrder === "asc" ? a.id - b.id : b.id - a.id;
+      return (a.id - b.id) * direction;
     } else {
-      return sortOrder === "asc"
-        ? a[sortField].localeCompare(b[sortField])
-        : b[sortField].localeCompare(a[sortField]);
+      return a[sortField].localeCompare(b[sortField]) * direction;
     }
   });
 
@@ -48,8 +52,10 @@ export default function CommentsTableWithAlias() {
   const currentComments = sortedComments.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filteredComments.length / recordsPerPage);
 
-  // Sorting handler
-  const handleSort = (field) => {
+  // Sorting handler (with alias)
+  const handleSort = (alias) => {
+    const field = sortAliases[alias]; // translate alias → actual field
+
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
@@ -66,7 +72,9 @@ export default function CommentsTableWithAlias() {
 
   return (
     <div className="p-4 flex flex-col items-center">
-      <h2 className="text-2xl font-bold mb-4 text-center">Comments Table with Alias</h2>
+      <h2 className="text-2xl font-bold mb-4 text-center">
+        Comments Table with Alias
+      </h2>
 
       {/* Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4 w-full max-w-5xl">
@@ -108,25 +116,41 @@ export default function CommentsTableWithAlias() {
                     className="border p-2 cursor-pointer"
                     onClick={() => handleSort("id")}
                   >
-                    ID {sortField === "id" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                    ID{" "}
+                    {sortField === "id" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
                   </th>
                   <th
                     className="border p-2 cursor-pointer"
                     onClick={() => handleSort("alias")}
                   >
-                    Alias {sortField === "alias" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                    Alias{" "}
+                    {sortField === "alias"
+                      ? sortOrder === "asc"
+                        ? "↑"
+                        : "↓"
+                      : ""}
                   </th>
                   <th
                     className="border p-2 cursor-pointer"
                     onClick={() => handleSort("name")}
                   >
-                    Name {sortField === "name" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                    Name{" "}
+                    {sortField === "name"
+                      ? sortOrder === "asc"
+                        ? "↑"
+                        : "↓"
+                      : ""}
                   </th>
                   <th
                     className="border p-2 cursor-pointer"
                     onClick={() => handleSort("email")}
                   >
-                    Email {sortField === "email" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                    Email{" "}
+                    {sortField === "email"
+                      ? sortOrder === "asc"
+                        ? "↑"
+                        : "↓"
+                      : ""}
                   </th>
                   <th className="border p-2">Comment</th>
                 </tr>
@@ -135,7 +159,7 @@ export default function CommentsTableWithAlias() {
                 {currentComments.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-100">
                     <td className="border p-2">{c.id}</td>
-                    <td className="border p-2">{c.alias}</td>
+                    <td className="border p-2">{c.alias || "-"}</td>
                     <td className="border p-2">{c.name}</td>
                     <td className="border p-2">{c.email}</td>
                     <td className="border p-2">{c.body}</td>
@@ -175,7 +199,8 @@ export default function CommentsTableWithAlias() {
                     1
                   </button>
                 );
-                if (startPage > 2) pageNumbers.push(<span key="dots-start">...</span>);
+                if (startPage > 2)
+                  pageNumbers.push(<span key="dots-start">...</span>);
               }
 
               for (let i = startPage; i <= endPage; i++) {
@@ -193,7 +218,8 @@ export default function CommentsTableWithAlias() {
               }
 
               if (endPage < totalPages) {
-                if (endPage < totalPages - 1) pageNumbers.push(<span key="dots-end">...</span>);
+                if (endPage < totalPages - 1)
+                  pageNumbers.push(<span key="dots-end">...</span>);
                 pageNumbers.push(
                   <button
                     key={totalPages}
@@ -212,7 +238,9 @@ export default function CommentsTableWithAlias() {
 
             {/* Next button */}
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
